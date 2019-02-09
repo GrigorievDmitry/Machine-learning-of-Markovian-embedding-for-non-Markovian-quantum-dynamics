@@ -8,8 +8,6 @@ from scipy.optimize import fmin_l_bfgs_b as bfgs
 
 sigma = np.array([[[0., 1.],[1., 0.]], [[0., -1j],[1j, 0.]], [[1., 0.],[0., -1.]]])
 
-
-
 model_1 = dl.dynamics_learning(2, 2, 2)
 model_2 = dl.dynamics_learning(2, 2, 2)
 model_1.set_in_state(np.array([[0., 0.], [0., 1.]]))
