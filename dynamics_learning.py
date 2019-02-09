@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.random as rnd
 import scipy.linalg as la
+from scipy.stats import unitary_group as rnd_un
 
 sigma = np.array([[[0., 1.],[1., 0.]], [[0., -1j],[1j, 0.]], [[1., 0.],[0., -1.]]])
 
@@ -71,6 +72,70 @@ class dynamics_learning():
     def measurement(E, env):
         return E.T.conj().dot(env.dot(E))
     
+    def get_evolution_h_pert(self, total_time_steps, h_pert):
+        state = np.kron(self.sys_dens, self.mem_dens) #KRON != TENSOR PRODUCT!!!! RESHAPE IN MATRIX!#
+        set_of_states = np.expand_dims(self.sys_dens, axis=0)
+        for i in range(1000):
+            state = self.phi(state)
+        resh_state = state.reshape((self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
+        state = np.kron(self.sys_dens, np.einsum('ijkj->ik', resh_state))
+        old_h = self.h
+        self.set_h(old_h + h_pert)
+        for i in range(total_time_steps - 1):
+            state = self.phi(state)
+            sys_state = np.einsum('ikjk->ij', state.reshape(self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
+            set_of_states = np.append(set_of_states, np.expand_dims(sys_state, axis = 0),axis = 0)
+        self.set_h(old_h)
+            
+        return set_of_states
+    
+    def get_evolution_h_pert_continuous(self, total_time_steps, time_step, h_pert):
+        state = np.kron(self.sys_dens, self.mem_dens) #KRON != TENSOR PRODUCT!!!! RESHAPE IN MATRIX!#
+        set_of_states = np.expand_dims(self.sys_dens, axis=0)
+        for i in range(1000):
+            state = self.phi(state)
+        resh_state = state.reshape((self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
+        state = np.kron(self.sys_dens, np.einsum('ijkj->ik', resh_state))
+        old_h = self.h
+        self.set_h(old_h + h_pert)
+        u = self.u
+        u = u.reshape((self.sys_dim, self.mem_dim, self.res_dim, self.sys_dim, self.mem_dim, self.res_dim))
+        rho_res = self.res_dens
+        ch = np.einsum('abcdef,fh,ijclmh->abijdelm', u, rho_res, u.conj())
+        ch = ch.reshape((self.sys_dim*self.mem_dim*self.sys_dim*self.mem_dim, self.sys_dim*self.mem_dim*self.sys_dim*self.mem_dim))
+        l = la.logm(ch)
+        ch = la.expm(time_step*l)
+        ch = ch.reshape((self.sys_dim*self.mem_dim, self.sys_dim*self.mem_dim, self.sys_dim*self.mem_dim, self.sys_dim*self.mem_dim))
+        for i in range(total_time_steps - 1):
+            state = np.einsum('ijkm,km->ij', ch, state)
+            sys_state = np.einsum('ikjk->ij', state.reshape(self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
+            set_of_states = np.append(set_of_states, np.expand_dims(sys_state, axis = 0),axis = 0)
+        self.set_h(old_h)
+            
+        return set_of_states
+    
+    def get_evolution_continuous(self, total_time_steps, time_step):
+        state = np.kron(self.sys_dens, self.mem_dens) #KRON != TENSOR PRODUCT!!!! RESHAPE IN MATRIX!#
+        set_of_states = np.expand_dims(self.sys_dens, axis=0)
+        for i in range(1000):
+            state = self.phi(state)
+        resh_state = state.reshape((self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
+        state = np.kron(self.sys_dens, np.einsum('ijkj->ik', resh_state))
+        u = self.u
+        u = u.reshape((self.sys_dim, self.mem_dim, self.res_dim, self.sys_dim, self.mem_dim, self.res_dim))
+        rho_res = self.res_dens
+        ch = np.einsum('abcdef,fh,ijclmh->abijdelm', u, rho_res, u.conj())
+        ch = ch.reshape((self.sys_dim*self.mem_dim*self.sys_dim*self.mem_dim, self.sys_dim*self.mem_dim*self.sys_dim*self.mem_dim))
+        l = la.logm(ch)
+        ch = la.expm(time_step*l)
+        ch = ch.reshape((self.sys_dim*self.mem_dim, self.sys_dim*self.mem_dim, self.sys_dim*self.mem_dim, self.sys_dim*self.mem_dim))
+        for i in range(total_time_steps - 1):
+            state = np.einsum('ijkm,km->ij', ch, state)
+            sys_state = np.einsum('ikjk->ij', state.reshape(self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
+            set_of_states = np.append(set_of_states, np.expand_dims(sys_state, axis = 0),axis = 0)
+            
+        return set_of_states
+    
     def get_evolution(self, total_time_steps):
         state = np.kron(self.sys_dens, self.mem_dens) #KRON != TENSOR PRODUCT!!!! RESHAPE IN MATRIX!#
         set_of_states = np.expand_dims(self.sys_dens, axis=0)
@@ -82,6 +147,23 @@ class dynamics_learning():
             state = self.phi(state)
             sys_state = np.einsum('ikjk->ij', state.reshape(self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
             set_of_states = np.append(set_of_states, np.expand_dims(sys_state, axis = 0),axis = 0)
+            
+        return set_of_states
+    
+    def get_evolution_seq_h_pert(self, total_time_steps, h_pert_seq):
+        state = np.kron(self.sys_dens, self.mem_dens) #KRON != TENSOR PRODUCT!!!! RESHAPE IN MATRIX!#
+        set_of_states = np.expand_dims(self.sys_dens, axis=0)
+        for i in range(1000):
+            state = self.phi(state)
+        resh_state = state.reshape((self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
+        state = np.kron(self.sys_dens, np.einsum('ijkj->ik', resh_state))
+        for i in range(total_time_steps - 1):
+            old_h = self.h
+            self.set_h(old_h + h_pert_seq[i])
+            state = self.phi(state)
+            sys_state = np.einsum('ikjk->ij', state.reshape(self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
+            set_of_states = np.append(set_of_states, np.expand_dims(sys_state, axis = 0),axis = 0)
+            self.set_h(old_h)
             
         return set_of_states
     
