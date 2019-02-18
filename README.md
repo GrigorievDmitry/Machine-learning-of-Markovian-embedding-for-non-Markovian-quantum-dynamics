@@ -1,4 +1,4 @@
-# Quantum_dynamics
+# Machine-learning-of-Markovian-embedding-for-non-Markovian-quantum-dynamics
 A code for extracting hidden features of the quantum reservoir via projective measurements on the controlled system. AdamLearning.py provides verification of the method descibed in Ref.[arXiv]. Dynamics_learning.py provides following list of functions which can be used on practice (!!!current version of the code works well only with sys_dim=2!!!):
 1) Object which contains parameters of system (Hamiltonian, initial state, dimension of subspaces) can be created by following line of code:
 ```python
