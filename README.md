@@ -21,7 +21,7 @@ get_evolution(total_time_steps)
 ```python
 get_evolution_h_pert(total_time_steps, h_pert)
 ```
-* Get evolution of system with perturbated hamiltonian (h+h_pert) given time step (dt=time_step) and given number of time: steps
+* Get evolution of system with perturbated hamiltonian (h+h_pert) given time step (dt=time_step) and given number of time steps:
 ```python
 get_evolution_h_pert_continuous(total_time_steps, time_step, h_pert)
 ```
