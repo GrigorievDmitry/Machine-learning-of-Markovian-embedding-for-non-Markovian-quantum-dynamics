@@ -47,5 +47,5 @@ adam_step(grad, learning_rate, m, v, t, b1=0.9, b2=0.999, epsilon=10.**(-8))
 ```
 * One step of optimization with Momentum SGD algorithm:
 ```python
-momentum_step(self, grad, learning_rate, m, gamma=0.9)
+momentum_step(grad, learning_rate, m, gamma=0.9)
 ```
