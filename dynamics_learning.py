@@ -84,7 +84,7 @@ class dynamics_learning():
             state = self.phi(state)
         #Swapping system part with the new one
         resh_state = state.reshape((self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
-        state = np.kron(self.sys_dens, np.einsum('ijkj->ik', resh_state))
+        state = np.kron(self.sys_dens, np.einsum('ijil->jl', resh_state))
         #Step-by-step calculation of evolution
         for i in range(total_time_steps - 1):
             state = self.phi(state)
@@ -102,7 +102,7 @@ class dynamics_learning():
             state = self.phi(state)
         #Swapping system part with the new one
         resh_state = state.reshape((self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
-        state = np.kron(self.sys_dens, np.einsum('ijkj->ik', resh_state))
+        state = np.kron(self.sys_dens, np.einsum('ijil->jl', resh_state))
         #Saving of the Hamiltonian
         old_h = self.h
         #Pertrubation of the Hamiltonian
@@ -125,7 +125,7 @@ class dynamics_learning():
             state = self.phi(state)
         #Swapping system part with the new one
         resh_state = state.reshape((self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
-        state = np.kron(self.sys_dens, np.einsum('ijkj->ik', resh_state))
+        state = np.kron(self.sys_dens, np.einsum('ijil->jl', resh_state))
         #Saving of the Hamiltonian
         old_h = self.h
         #Pertrubation of the Hamiltonian
@@ -185,7 +185,7 @@ class dynamics_learning():
         for i in range(total_time_steps - 1):
 
             state = np.einsum('ijkm,km->ij', ch, state)
-            sys_state = np.einsum('ikjk->ij', state.reshape(self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
+            sys_state = np.einsum('ikjl->ij', state.reshape(self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
             set_of_states = np.append(set_of_states, np.expand_dims(sys_state, axis = 0),axis = 0)
 
         return set_of_states

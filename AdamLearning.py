@@ -18,15 +18,15 @@ def aux_h_rand(dimention):     #SETIING RANDOM HAMILTONIANS#
 
 #MODEL -> SET OF DIMENTIONS
 sys_dim_model1=2
-mem_dim_model1=4
-res_dim_model1=4
+mem_dim_model1=2
+res_dim_model1=2
 
 model_1 = dl.dynamics_learning(sys_dim_model1, mem_dim_model1, res_dim_model1)
 model_1.set_in_state(np.array([[0., 0.], [0., 1.]]))
 
 #MODEL2 -> SET OF DIMENTIONS
 sys_dim_model2=2
-mem_dim_model2=4
+mem_dim_model2=2
 res_dim_model2=2
 
 model_2 = dl.dynamics_learning(sys_dim_model2, mem_dim_model2, res_dim_model2)
@@ -73,7 +73,7 @@ np.save('h_true.npy', h_true)
 
 #==================================PARAMETERS===================================
 batch_size = 10**3
-number_of_time_steps = 10**3
+number_of_time_steps = 10**5
 learning_rate = 0.001
 number_of_epochs = 300
 plotting_time_step = 0.1
