@@ -4,44 +4,71 @@ import matplotlib.pyplot as plt
 import dynamics_learning as dl
 from dynamics_learning import dynamics_learning as dl1
 from scipy.optimize import fmin_l_bfgs_b as bfgs
+import os
 
 sigma = np.array([[[0., 1.],[1., 0.]], [[0., -1j],[1j, 0.]], [[1., 0.],[0., -1.]]]) #The set of Pauli matrices
 
-
 #Initialization of two models (model_1 for dataset generation and model_2 for learning)
-model_1 = dl.dynamics_learning(2, 2, 2)
-model_2 = dl.dynamics_learning(2, 2, 4)
+#MODEL1 -> DATASET GENERATION
+
+def aux_h_rand(dimention):     #SETIING RANDOM HAMILTONIANS#
+    h = rnd.rand(dimention,dimention) + 1j*rnd.rand(dimention,dimention)
+    h = h + h.conj().T
+    return h
+
+#MODEL -> SET OF DIMENTIONS
+sys_dim_model1=2
+mem_dim_model1=2
+res_dim_model1=2
+
+model_1 = dl.dynamics_learning(sys_dim_model1, mem_dim_model1, res_dim_model1)
 model_1.set_in_state(np.array([[0., 0.], [0., 1.]]))
+
+#MODEL2 -> SET OF DIMENTIONS
+sys_dim_model2=2
+mem_dim_model2=2
+res_dim_model2=2
+
+model_2 = dl.dynamics_learning(sys_dim_model2, mem_dim_model2, res_dim_model2)
 model_2.set_in_state(np.array([[0., 0.], [0., 1.]]))
 
 #Hamiltonian of model_2
-h = rnd.rand(4,4) + 1j*rnd.rand(4,4)
-h = np.kron(h + h.conj().T, np.eye(4))
+h = aux_h_rand(sys_dim_model2*mem_dim_model2)
+h = np.kron(h, np.eye(res_dim_model2))
 
 #Hamiltonian of model_1
-h_true = rnd.rand(4,4) + 1j*rnd.rand(4,4)
-h_true = h_true + h_true.conj().T
-h_true = np.kron(h_true + h_true.conj().T, np.eye(2))
+#TRUE HAMILTONINAN (model_1)
+h_true = aux_h_rand(sys_dim_model1*mem_dim_model1)
+h_true = np.kron(h_true, np.eye(res_dim_model1))
 h_true = 0.8*h_true
-h_s = rnd.rand(2,2) + 1j*rnd.rand(2,2)
-h_s = h_s + h_s.T.conj()
-h_m = rnd.rand(2,2) + 1j*rnd.rand(2,2)
-h_m = h_m + h_m.T.conj()
-h_r = rnd.rand(2,2) + 1j*rnd.rand(2,2)
-h_r = h_r + h_r.T.conj()
-h_ism = rnd.rand(4,4) + 1j*rnd.rand(4,4)
-h_ism = h_ism + h_ism.T.conj()
-h_imr = rnd.rand(4,4) + 1j*rnd.rand(4,4)
-h_imr = h_imr + h_imr.T.conj()
-h_isr = rnd.rand(4,4) + 1j*rnd.rand(4,4)
-h_isr = h_isr + h_isr.T.conj()
-h_isr = np.kron(h_isr, np.eye(2)).reshape((2,2,2,2,2,2))
+
+dict_dimentions = {'s':sys_dim_model1,'m': mem_dim_model1,'r':res_dim_model1,'ism':sys_dim_model1*mem_dim_model1,\
+'imr':mem_dim_model1*res_dim_model1,'isr': sys_dim_model1*res_dim_model1}
+dict_h = {}
+for j in dict_dimentions:
+    dict_h[j] = aux_h_rand(dict_dimentions[j])
+
+#Dimetion of h_isr = sys_dim_model1 * res_dim_model1#
+#IT NEEDS TO PERFORM  OF "ALIGNMENT" or SORT OF INDECES IN MIXED HAMILTONIAN (h_isr) in the
+#following order "SYSTEM"->"MEMORY"->"RESERVOIR"
+# AT FIRST WE RESHAPE MULTIINDEX IN FORM OF SEPARATE INDECES, THEN WITH RESPECT TO PROPER
+#ORDER WE EXPAND FULL DIMENTION OF h_isr
+h_isr = np.kron(dict_h['isr'], np.eye(mem_dim_model1)).reshape(sys_dim_model1,res_dim_model1, \
+mem_dim_model1,sys_dim_model1,res_dim_model1,mem_dim_model1) #SYSTEM Reservoir Memory#
 h_isr = h_isr.transpose((0,2,1,3,5,4))
-h_isr = h_isr.reshape((8,8))
-h_true = 0.6*np.kron(h_s, np.eye(4)) + 0.6*np.kron(np.eye(4), h_r)\
- + 0.6*np.kron(np.kron(np.eye(2), h_m), np.eye(2)) + 0.15*np.kron(np.eye(2), h_imr)\
- + 0.3*np.kron(h_ism, np.eye(2)) + 0.1*h_isr
-np.save('h_true.npy', h_true) #Saving of model_1 Hamiltonian
+
+dict_h['isr'] = h_isr.reshape(sys_dim_model1 * res_dim_model1 * mem_dim_model1, \
+sys_dim_model1 * res_dim_model1 * mem_dim_model1)
+
+full_dimention = sys_dim_model1 * mem_dim_model1 * res_dim_model1
+
+
+#RANDOMIZED model_1 Hamiltonian#
+h_true = 0.6*np.kron(dict_h['s'], np.eye(mem_dim_model1 * res_dim_model1)) + 0.6*np.kron(np.eye(sys_dim_model1 * mem_dim_model1), dict_h['r'])\
+ + 0.6*np.kron(np.kron(np.eye(sys_dim_model1), dict_h['m']), np.eye(res_dim_model1)) + 0.15*np.kron(np.eye(sys_dim_model1), dict_h['imr'])\
+ + 0.3*np.kron(dict_h['ism'], np.eye(res_dim_model1)) + 0.1*dict_h['isr']
+np.save('h_true.npy', h_true)
+#Saving of model_1 Hamiltonian
 
 #==================================PARAMETERS===================================
 batch_size = 10**3
@@ -77,6 +104,7 @@ true_llh = np.full(number_of_epochs, p1)
 for epoch in range(number_of_epochs):
     llh_agr = 0.
     for batch in range(tr_set_reshaped.shape[0]):
+        #raise Exception ('NICE')
         grad = model_2.grad(tr_set_reshaped[batch])
         m, v = model_2.adam_step(grad, learning_rate, m, v, t, b1=0.9, b2=0.95, epsilon=10.**(-4))
         t = t + 1.
@@ -90,6 +118,10 @@ for epoch in range(number_of_epochs):
     plt.legend(('Trained System','Real System'))
     plt.ylabel('Log Likelihood')
     plt.xlabel('Epochs')
+
+    path = os.getcwd() + '/pic'
+    if not os.path.exists(path):
+        os.makedirs(path)
     plt.savefig(f'pic/likelihood_fig{counter}.pdf')
     plt.pause(0.05)
     T = np.arange(0, max_total_plotting_time, plotting_time_step)
@@ -132,6 +164,7 @@ for epoch in range(number_of_epochs):
     plt.subplot(2,2,4)
     plt.ylim(top = 0.6)
     plt.ylim(bottom = 0)
+
     diff1 = rho1 - rho_zero1
     diff2 = rho2 - rho_zero2
     tr_dist1 = np.sqrt(np.einsum('kij,kij->k', diff1, diff1.conj()))/np.sqrt(2.)
