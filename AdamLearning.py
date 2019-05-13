@@ -55,7 +55,6 @@ for j in dict_dimentions:
 #ORDER WE EXPAND FULL DIMENTION OF h_isr
 h_isr = np.kron(dict_h['isr'], np.eye(mem_dim_model1)).reshape(sys_dim_model1,res_dim_model1, \
 mem_dim_model1,sys_dim_model1,res_dim_model1,mem_dim_model1) #SYSTEM Reservoir Memory#
-
 h_isr = h_isr.transpose((0,2,1,3,5,4))
 
 dict_h['isr'] = h_isr.reshape(sys_dim_model1 * res_dim_model1 * mem_dim_model1, \
