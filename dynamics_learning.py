@@ -185,7 +185,7 @@ class dynamics_learning():
         for i in range(total_time_steps - 1):
 
             state = np.einsum('ijkm,km->ij', ch, state)
-            sys_state = np.einsum('ikjl->ij', state.reshape(self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
+            sys_state = np.einsum('ikjk->ij', state.reshape(self.sys_dim, self.mem_dim, self.sys_dim, self.mem_dim))
             set_of_states = np.append(set_of_states, np.expand_dims(sys_state, axis = 0),axis = 0)
 
         return set_of_states
